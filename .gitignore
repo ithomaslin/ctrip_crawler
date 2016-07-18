@@ -9,3 +9,5 @@ env/travelr/*
 *.log
 
 core/crawler.log
+.idea/*
+core/*.csv

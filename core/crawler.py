@@ -3,8 +3,6 @@ from pyquery import PyQuery
 import re
 import csv
 import datetime
-import thread
-import threading
 import logging
 
 
@@ -144,9 +142,4 @@ def run_crawler(start, end):
 
 
 if __name__ == "__main__":
-    # try:
-    #     thread.start_new_thread(run_crawler, 1, 10)
-    #     thread.start_new_thread(run_crawler, 11, 20)
-    # except:
-    #     print "Error: unable to start thread"
     run_crawler(1, 10)
