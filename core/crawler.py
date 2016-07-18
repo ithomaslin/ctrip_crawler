@@ -29,7 +29,7 @@ def get_ctrip_china_city_list(start, end):
                 i,
                 requests.RequestException.message
             )
-            logging.debug(log)
+            logging.warning(log)
             print log
 
     return cities
@@ -66,7 +66,7 @@ def get_category(city):
             city.get('city_name').encode('utf-8'),
             requests.RequestException.message
         )
-        logging.debug(log)
+        logging.warning(log)
         print log
 
 
@@ -103,7 +103,7 @@ def get_category_location(category):
                 i,
                 requests.RequestException.message
             )
-            logging.debug(log)
+            logging.warning(log)
             print log
     return output
 
