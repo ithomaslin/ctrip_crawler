@@ -1,0 +1,11 @@
+
+env/
+env/travelr/lib/
+env/travelr/bin
+env/travelr/include
+env/travelr/*
+
+*.egg-info/
+*.log
+
+core/crawler.log
