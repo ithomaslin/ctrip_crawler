@@ -1,9 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+The MIT License (MIT)
+Copyright (c) 2016 Thomas Lin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"),to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify, 
+merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 import requests
 from pyquery import PyQuery
 import re
 import csv
 import datetime
 import logging
+
+# Uncomment the following if multithread is used.
+# For full documentation: https://docs.python.org/2/library/threading.html
+# import threading
 
 
 CTRIP_CHINA_LOCATION_BASE_URL = 'http://you.ctrip.com/countrysightlist/china110000'
@@ -12,6 +40,15 @@ logging.basicConfig(filename='crawler.log', level=logging.DEBUG)
 
 
 def get_ctrip_china_city_list(start, end):
+    """
+    Getting China city list from ctrip
+    :param start: starting page number
+    :type start: int
+    :param end: ending page number
+    :type end: int
+    
+    :return: list
+    """
     cities = []
     for i in xrange(start, end + 1):
         url = '{}/p{}.html'.format(CTRIP_CHINA_LOCATION_BASE_URL, i)
@@ -19,8 +56,8 @@ def get_ctrip_china_city_list(start, end):
             res = requests.get(url)
             raw = PyQuery(res.text)
             tmp = raw('.list_mod1 > dl').map(lambda i, el: {
-                'city_name': PyQuery(el)('dt > a').text(),
-                'url': '{}{}'.format(CTRIP_BASE_URL, PyQuery(PyQuery(el)('dd')[1])('a').attr('href'))
+                'city_name':    PyQuery(el)('dt > a').text(),
+                'url':          '{}{}'.format(CTRIP_BASE_URL, PyQuery(PyQuery(el)('dd')[1])('a').attr('href'))
             })
             cities += tmp
         except requests.RequestException:
@@ -37,10 +74,11 @@ def get_ctrip_china_city_list(start, end):
 
 def get_category(city):
     """
-
-    :param city: dict
-    {'city_name': u'\u6fb3\u95e8', 'url': 'http://you.ctrip.com/sightlist/macau39.html'}
-    :return:
+    Getting different categories of tourist traps of a given city
+    :param city: dictionary consists of city name and associated url
+    :type city: dict
+    
+    :return: list
     """
     url = city.get('url')
     categories = []
@@ -53,7 +91,7 @@ def get_category(city):
         raw = PyQuery(res.text)
         tmp = raw('.search_wide > ul > li > dl > dd > a').map(lambda i, el: {
             'category': PyQuery(el).text(),
-            'url': '{}/s{}.html'.format(
+            'url':      '{}/s{}.html'.format(
                 url.replace('.html', ''),
                 re.search('[0-9]+', PyQuery(el).attr('onclick')).group(0)
             )
@@ -71,6 +109,13 @@ def get_category(city):
 
 
 def get_category_location(category):
+    """
+    Getting sight info f given category
+    :param category: dictionary consists of category name and associated url
+    :type category: dict
+    
+    :return: list
+    """
     logging.info('[{:%Y-%m-%d %H:%M:%S}] Starting getting data for category: {}...'.format(
         datetime.datetime.now(),
         category.get('category').encode('utf-8')
@@ -91,9 +136,9 @@ def get_category_location(category):
             _res = requests.get('{}-p{}.html'.format(url.replace('.html', ''), i))
             _raw = PyQuery(_res.text)
             tmp = _raw('.rdetailbox').map(lambda i, el: {
-                'name': PyQuery(el)('dl > dt > a').text(),
-                'address': PyQuery(el)('dl > dd.ellipsis').text(),
-                'score': PyQuery(el)('ul.r_comment > li > a.score > strong').text()
+                'name':     PyQuery(el)('dl > dt > a').text(),
+                'address':  PyQuery(el)('dl > dd.ellipsis').text(),
+                'score':    PyQuery(el)('ul.r_comment > li > a.score > strong').text()
             })
             output += tmp
         except requests.RequestException:
@@ -109,6 +154,13 @@ def get_category_location(category):
 
 
 def run_crawler(start, end):
+    """
+    Starting the crawler task and generate output csv file
+    :param start: starting page number
+    :type start: int
+    :param end: ending page number
+    :type end: int
+    """
     cities = get_ctrip_china_city_list(start=start, end=end)
     res = []
     for city in cities:
@@ -122,11 +174,11 @@ def run_crawler(start, end):
             locations = get_category_location(c)
             for location in locations:
                 res.append({
-                    'city': city.get('city_name').encode('utf-8'),
+                    'city':     city.get('city_name').encode('utf-8'),
                     'category': c.get('category').encode('utf-8'),
-                    'name': location.get('name').encode('utf-8'),
-                    'address': location.get('address').encode('utf-8'),
-                    'score': location.get('score').encode('utf-8')
+                    'name':     location.get('name').encode('utf-8'),
+                    'address':  location.get('address').encode('utf-8'),
+                    'score':    location.get('score').encode('utf-8')
                 })
 
         logging.info('[{:%Y-%m-%d %H:%M:%S}] Finishing getting data for {}.'.format(
